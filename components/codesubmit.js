@@ -1,61 +1,90 @@
-import Router from "next/router";
-import {createRef, useState} from "react";
-import Form from "react-bootstrap/Form";
-import Button from "react-bootstrap/Button";
-
+import React, {useState} from "react";
+import FormGroup from "@material-ui/core/FormGroup";
+import TextField from "@material-ui/core/TextField";
+import Card from "@material-ui/core/Card";
+import Grid from "@material-ui/core/Grid";
+import Typography from "@material-ui/core/Typography";
+import CardContent from "@material-ui/core/CardContent";
+import FormControlLabel from "@material-ui/core/FormControlLabel";
+import Switch from "@material-ui/core/Switch";
+import Button from '@material-ui/core/Button';
+import useAuth from "./AuthContext";
 
 function CodeSubmit() {
-    const [code, setCode] = useState('');
-    const [lang, setLang] = useState('');
-    const ref = createRef();
+    const [values, setValues] = useState({
+        lang: '',
+        code: ''
+    })
+
+    const [checked, setChecked] = useState(false)
+
+    const { createSnippet } = useAuth();
 
     const handleSubmit = (event) => {
-        fetch('https://api.zacharymyers.com/api/create', {
-            method: "POST",
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                code: code,
-                private: isOn(ref.current.value),
-                language: lang
-            })
-        }).then(r => {
-            r.json().then(res => {
-                Router.push(`/${res.slug}`)
-            })
-        })
-        console.log(code)
-        console.log(ref.current)
-        console.log(lang)
-        event.preventDefault()
+        createSnippet(values.code, values.lang, checked)
     }
     
-    function isOn(value) {
-        return value === "on";
+    const handleChange = (event) => {
+        setValues({ ...values, [event.target.name]: event.target.value });
+    }
+
+    const handleChecked = (event) => {
+        setChecked(event.target.checked);
     }
 
     return (
-        <Form onSubmit={handleSubmit}>
-            <Form.Group controlId="formBasicEmail">
-                <Form.Label>Code</Form.Label>
-                <Form.Control as="textarea" onChange={(event => setCode(event.target.value))} placeholder="Your code goes here" rows="7" />
-            </Form.Group>
-            <Form.Group controlId="formBasicPassword">
-                <Form.Label>Language</Form.Label>
-                <Form.Control type="text" onChange={event => setLang(event.target.value)} placeholder="Language" />
-            </Form.Group>
-            <Form.Group controlId="formBasicCheckbox">
-                <Form.Check type="checkbox" label="Private" ref={ref}  />
-                <Form.Text className="text-muted">
-                    Only people with the link will be able to access it.
-                </Form.Text>
-            </Form.Group>
-            <Button variant="primary" type="submit">
-                Submit!
-            </Button>
-        </Form>
+        <Grid
+            container
+            spacing={3}
+            direction="column"
+            alignItems="center"
+            justify="center"
+            style={{ minHeight: '90vh', maxWidth: '100vw' }}
+        >
+            <Card>
+                <CardContent>
+                    <Typography color="textSecondary" gutterBottom style={{ marginBottom: 12 }}>
+                        Your code goes here
+                    </Typography>
+                    <FormGroup>
+                        <TextField
+                            id="outlined-multiline-flexible"
+                            label="Code"
+                            multiline
+                            rows={7}
+                            value={values.code}
+                            style={{ width: 500, marginBottom: 12 }}
+                            onChange={handleChange}
+                            color="#FFF"
+                            name="code"
+                            variant="outlined"
+                        />
+                        <TextField
+                            id="outlined-singleLine-flexible"
+                            label="Language"
+                            value={values.lang}
+                            style={{ width: 500, marginBottom: 12 }}
+                            onChange={handleChange}
+                            color="#FFF"
+                            name="lang"
+                            variant="outlined"
+                        />
+                        <FormControlLabel control={
+                            <Switch
+                                checked={checked}
+                                onChange={handleChecked}
+                                name="check"
+                                color="primary"
+                                disabled
+                            />
+                        }  label="Private" style={{ marginBottom: 12 }}/>
+                        <Button variant="outlined" color="primary" onClick={handleSubmit}>
+                            Share!
+                        </Button>
+                    </FormGroup>
+                </CardContent>
+            </Card>
+        </Grid>
     )
 }
 
